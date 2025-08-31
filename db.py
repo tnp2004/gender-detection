@@ -84,6 +84,16 @@ def findLocationByCameraId(id: int, db: Session = next(getDatabase())):
     locations = db.query(Location).filter(Location.cameraId == id).order_by(desc(Location.createdAt)).all()
     return locations
 
+def updateLocation(id: int, newLocation: str, db: Session = next(getDatabase())):
+    location = db.query(Location).filter(Location.locationId == id).first()
+    if not location:
+        print(f"Location id: {id} not found")
+        return
+    location.location = newLocation
+    db.commit()
+    db.refresh(location)
+    return location
+
 # Gender log
 def createGenderLog(log: dict, db: Session = next(getDatabase())):
     if not findLocation(log["locationId"]): return

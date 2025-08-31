@@ -1,4 +1,4 @@
-from db import createCamera, createLocation
+from db import createCamera, createLocation, findLocationByCameraId, updateLocation
 from pos import getCurrentLatLng
 import json
 import os
@@ -43,6 +43,10 @@ def readMetadata():
         if not lat == jsonData["lat"] or not long == jsonData["long"]:
             print("The camera was moved, creating new metadata file...")
             return createMetadata(jsonData["cameraId"])
+        latestCameraLocation = findLocationByCameraId(jsonData["cameraId"])[0]
+        if not latestCameraLocation.location == jsonData["location"]:
+            print("Updating location...")
+            updateLocation(latestCameraLocation.locationId, newLocation=jsonData["location"])
         cameraDict = {
             "cameraId": jsonData["cameraId"],
             "location": jsonData["location"],
