@@ -4,35 +4,24 @@ import json
 import os
 
 metadataFileName = "metadata.json"
+defaultLocation = "Location not specified"
 
 def getMetadata():
     if isMetadataExists():
         return readMetadata()
     else:
-        return createMetadata()
+        print("Creating metadata file...")
+        camera = createCamera()
+        return createMetadata(cameraId=camera.cameraId)
 
 def isMetadataExists():
     return os.path.exists(f"./{metadataFileName}")
 
-def readMetadata():
-    with open(metadataFileName, "r") as file:
-        jsonData = json.load(file)
-        cameraDict = {
-            "cameraId": jsonData["cameraId"],
-            "location": jsonData["location"],
-            "lat": jsonData["lat"],
-            "long": jsonData["long"]
-        }
-        return cameraDict
-
-def createMetadata():
-    print("Creating metadata file...")
+def createMetadata(cameraId: str):
     with open(metadataFileName, "w", encoding="utf-8") as file:
-        camera = createCamera()
         lat, long = getCurrentLatLng()
-        defaultLocation = "Location not specified"
         location = createLocation({
-            "cameraId": camera.cameraId,
+            "cameraId": cameraId,
             "location": defaultLocation, 
             "lat": lat, 
             "long": long
@@ -45,4 +34,19 @@ def createMetadata():
             "long": location.long
         }
         json.dump(cameraDict, file, indent=4, ensure_ascii=False)
+        return cameraDict
+
+def readMetadata():
+    with open(metadataFileName, "r") as file:
+        jsonData = json.load(file)
+        lat, long = getCurrentLatLng()
+        if not lat == jsonData["lat"] or not long == jsonData["long"]:
+            print("The camera was moved, creating new metadata file...")
+            return createMetadata(jsonData["cameraId"])
+        cameraDict = {
+            "cameraId": jsonData["cameraId"],
+            "location": jsonData["location"],
+            "lat": jsonData["lat"],
+            "long": jsonData["long"]
+        }
         return cameraDict
