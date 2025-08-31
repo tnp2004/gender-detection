@@ -177,3 +177,6 @@ pyrightconfig.json
 
 # YOLO models
 *.pt
+
+# Metadata
+metadata.json
