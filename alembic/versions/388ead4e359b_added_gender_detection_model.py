@@ -1,8 +1,8 @@
 """Added Gender detection model
 
-Revision ID: f26c792616d6
+Revision ID: 388ead4e359b
 Revises: 
-Create Date: 2025-08-31 15:44:26.707636+07:00
+Create Date: 2025-08-31 19:06:25.013633+07:00
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'f26c792616d6'
+revision: str = '388ead4e359b'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None

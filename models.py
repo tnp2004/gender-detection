@@ -9,9 +9,6 @@ class Camera(Base):
 
     cameraId = Column(String(36), primary_key=True)
     status = Column(String(10), nullable=False)
-
-    def __repr__(self):
-        return f"camera id: {self.id}"
     
 class Location(Base):
     __tablename__ = "location"
@@ -22,9 +19,6 @@ class Location(Base):
     lat = Column(Float(), nullable=False)
     long = Column(Float(), nullable=False)
     createdAt = Column(TIMESTAMP, default=func.now())
-
-    def __repr__(self):
-        return f"location id: {self.id}"
     
 class GenderLog(Base):
     __tablename__ = "genderLog"
@@ -33,6 +27,3 @@ class GenderLog(Base):
     location = Column(ForeignKey("location.locationId"), nullable=False)
     gender = Column(String(10), nullable=False)
     detectedAt = Column(TIMESTAMP, default=func.now())
-
-    def __repr__(self):
-        return f"gender log id: {self.id}"
