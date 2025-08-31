@@ -1,6 +1,7 @@
 import cv2
 from ultralytics import YOLO
 from deepface import DeepFace
+from datetime import datetime
 
 NAME = "Gender detector"
 
@@ -11,6 +12,11 @@ cap = cv2.VideoCapture(0)
 cv2.namedWindow(NAME)
 
 peopleData = {}
+
+def getCurrentTime():
+    now = datetime.now()
+    year = now.year + 543
+    return now.strftime(f"%H.%M %d/%m/{year}")
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -36,7 +42,7 @@ while cap.isOpened():
                     result = DeepFace.analyze(croppedFrame, actions=["gender"], enforce_detection=False)
                     gender = "Man" if result[0]["gender"]["Man"] > result[0]["gender"]["Woman"] else "Woman"
                     peopleData[trackId] = gender
-                    print(peopleData)
+                    print(f"{getCurrentTime()} - found {gender}")
     except Exception as e:
         match str(e):
             case "'NoneType' object has no attribute 'int'": pass
