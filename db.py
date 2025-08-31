@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, desc
 from sqlalchemy.orm import sessionmaker, Session
 from dotenv import load_dotenv
 from models import Base, Camera, Location, GenderLog
@@ -79,6 +79,10 @@ def findLocation(id: int, db: Session = next(getDatabase())):
         print(f"Location id: {id} not found")
         return
     return location
+
+def findLocationByCameraId(id: int, db: Session = next(getDatabase())):
+    locations = db.query(Location).filter(Location.cameraId == id).order_by(desc(Location.createdAt)).all()
+    return locations
 
 # Gender log
 def createGenderLog(log: dict, db: Session = next(getDatabase())):

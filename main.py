@@ -1,12 +1,16 @@
-import cv2
 from ultralytics import YOLO
 from deepface import DeepFace
 from datetime import datetime
+from db import createGenderLog, findLocationByCameraId, activeCamera, inactiveCamera
+from file import getMetadata
+import cv2
 
 NAME = "Gender detector"
 
 model = YOLO("yolo12n.pt")
 classList = model.names
+
+metadata = getMetadata()
 
 cap = cv2.VideoCapture(0)
 cv2.namedWindow(NAME)
@@ -18,12 +22,17 @@ def getCurrentTime():
     year = now.year + 543
     return now.strftime(f"%H.%M %d/%m/{year}")
 
+def addGenderLog(gender: str):
+    latestCameraLocation = findLocationByCameraId(metadata["cameraId"])[0]
+    createGenderLog({"locationId": latestCameraLocation.locationId, "gender": gender})
+
 while cap.isOpened():
     ret, frame = cap.read()
+    activeCamera(metadata["cameraId"])
     if not ret: break
 
     try:
-        results = model.track(frame, persist=True, classes=[0], device=0, verbose=False)
+        results = model.track(frame, persist=True, classes=[0], device=0, verbose=False, conf=0.8)
         data = results[0].boxes
         if data is not None and data.is_track:
             boxes = data.xyxy.cpu()
@@ -43,6 +52,7 @@ while cap.isOpened():
                     gender = "Man" if result[0]["gender"]["Man"] > result[0]["gender"]["Woman"] else "Woman"
                     peopleData[trackId] = gender
                     print(f"{getCurrentTime()} - found {gender}")
+                    addGenderLog(gender)
     except Exception as e:
         match str(e):
             case "'NoneType' object has no attribute 'int'": pass
@@ -54,5 +64,6 @@ while cap.isOpened():
         print("\nQuit!")
         break
 
+inactiveCamera(metadata["cameraId"])
 cap.release()
 cv2.destroyAllWindows()
