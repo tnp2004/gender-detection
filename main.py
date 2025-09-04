@@ -2,8 +2,13 @@ from ultralytics import YOLO
 from deepface import DeepFace
 from db import createGenderLog, findLocationByCameraId, activeCamera, inactiveCamera
 from file import getMetadata
-from utils.log import printGenderLog
+from utils.log import printGenderLog, printQuitLog
 import cv2
+from enum import Enum
+
+class Gender(Enum):
+    MAN = "Man"
+    WOMAN = "Woman"
 
 NAME = "Gender detector"
 
@@ -44,7 +49,7 @@ while cap.isOpened():
                 if trackId not in peopleData:
                     croppedFrame = frame[y1:y2, x1:x2]
                     result = DeepFace.analyze(croppedFrame, actions=["gender"], enforce_detection=False)
-                    gender = "Man" if result[0]["gender"]["Man"] > result[0]["gender"]["Woman"] else "Woman"
+                    gender = Gender.MAN.value if result[0]["gender"]["Man"] > result[0]["gender"]["Woman"] else Gender.WOMAN.value
                     peopleData[trackId] = gender
                     printGenderLog(gender)
                     addGenderLog(gender)
@@ -56,7 +61,7 @@ while cap.isOpened():
     cv2.imshow(NAME, frame)
 
     if cv2.waitKey(1) & 0xFF == ord("q"):
-        print("\nQuit!")
+        printQuitLog()
         break
 
 inactiveCamera(metadata["cameraId"])
