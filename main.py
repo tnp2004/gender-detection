@@ -62,7 +62,7 @@ while cap.isOpened():
 
     cv2.imshow(NAME, frame)
 
-    if cv2.waitKey(1) & 0xFF == ord("q"):
+    if cv2.waitKey(1) & 0xFF == ord("q") or cv2.getWindowProperty(NAME, cv2.WND_PROP_VISIBLE) < 1:
         printQuitLog()
         break
 
