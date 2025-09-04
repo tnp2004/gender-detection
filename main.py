@@ -1,8 +1,8 @@
 from ultralytics import YOLO
 from deepface import DeepFace
-from datetime import datetime
 from db import createGenderLog, findLocationByCameraId, activeCamera, inactiveCamera
 from file import getMetadata
+from utils.log import printGenderLog
 import cv2
 
 NAME = "Gender detector"
@@ -16,11 +16,6 @@ cap = cv2.VideoCapture(0)
 cv2.namedWindow(NAME)
 
 peopleData = {}
-
-def getCurrentTime():
-    now = datetime.now()
-    year = now.year + 543
-    return now.strftime(f"%H.%M %d/%m/{year}")
 
 def addGenderLog(gender: str):
     latestCameraLocation = findLocationByCameraId(metadata["cameraId"])[0]
@@ -51,7 +46,7 @@ while cap.isOpened():
                     result = DeepFace.analyze(croppedFrame, actions=["gender"], enforce_detection=False)
                     gender = "Man" if result[0]["gender"]["Man"] > result[0]["gender"]["Woman"] else "Woman"
                     peopleData[trackId] = gender
-                    print(f"{getCurrentTime()} - found {gender}")
+                    printGenderLog(gender)
                     addGenderLog(gender)
     except Exception as e:
         match str(e):
