@@ -21,7 +21,7 @@ class Location(Base):
     location = Column(String(50), nullable=False)
     lat = Column(Float(), nullable=False)
     long = Column(Float(), nullable=False)
-    createdAt = Column(TIMESTAMP, default=func.now())
+    createdAt = Column(TIMESTAMP(timezone=True), default=func.now())
 
     def __repr__(self):
         return f"id: {self.locationId}, cameraId: {self.cameraId}, location: {self.location}, lat: {self.lat}, long: {self.long}, createdAt: {self.createdAt}"
@@ -32,7 +32,7 @@ class GenderLog(Base):
     logId = Column(String(36), primary_key=True)
     locationId = Column(ForeignKey("location.locationId"), nullable=False)
     gender = Column(String(10), nullable=False)
-    detectedAt = Column(TIMESTAMP, default=func.now())
+    detectedAt = Column(TIMESTAMP(timezone=True), default=func.now())
 
     def __repr__(self):
         return f"id: {self.logId}, locationId: {self.locationId}, gender: {self.gender}, detectedAt: {self.detectedAt}"

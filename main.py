@@ -6,6 +6,7 @@ from db import createGenderLog, findLocationByCameraId, activeCamera, inactiveCa
 from file import getMetadata
 from utils.log import printGenderLog, printQuitLog
 from enum import Enum
+
 import cv2
 
 class Gender(Enum):
@@ -26,7 +27,7 @@ peopleData = {}
 
 def addGenderLog(gender: str):
     latestCameraLocation = findLocationByCameraId(metadata["cameraId"])[0]
-    createGenderLog({"locationId": latestCameraLocation.locationId, "gender": gender})
+    return createGenderLog({"locationId": latestCameraLocation.locationId, "gender": gender})
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -53,8 +54,8 @@ while cap.isOpened():
                     result = DeepFace.analyze(croppedFrame, actions=["gender"], enforce_detection=False)
                     gender = Gender.MAN.value if result[0]["gender"]["Man"] > result[0]["gender"]["Woman"] else Gender.WOMAN.value
                     peopleData[trackId] = gender
-                    printGenderLog(gender)
-                    addGenderLog(gender)
+                    genderLog = addGenderLog(gender)
+                    printGenderLog(gender, genderLog.detectedAt)
     except Exception as e:
         match str(e):
             case "'NoneType' object has no attribute 'int'": pass

@@ -1,4 +1,6 @@
 from rich.console import Console 
+from utils.time import utcToThai
+from sqlalchemy import Column
 from datetime import datetime
 
 textColor = "grey19"
@@ -11,18 +13,13 @@ quitTextColor = "grey100"
 
 console = Console()
 
-def getCurrentTime():
-    now = datetime.now()
-    year = now.year + 543
-    return now.strftime(f"%H.%M %d/%m/{year}")
-
-def printGenderLog(gender: str):
+def printGenderLog(gender: str, utcTimestamp: Column[datetime]):
     genderStyle = ""
     match gender:
         case "Man": genderStyle = manLogStyle()
         case "Woman": genderStyle = womanLogStyle()
     
-    timeStyle = timeLogStyle(getCurrentTime())
+    timeStyle = timeLogStyle(str(utcTimestamp))
     console.print(f"[{timeStyle}] found {genderStyle}")
 
 def printQuitLog():
@@ -35,4 +32,5 @@ def womanLogStyle():
     return f"[bold {textColor} on {womanBgColor}] Woman [/]"
 
 def timeLogStyle(time: str):
-    return f"[white not bold]{time}[/]"
+    thaiTimeFormatted = utcToThai(time)
+    return f"[white not bold]{thaiTimeFormatted}[/]"
