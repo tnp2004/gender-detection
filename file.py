@@ -1,5 +1,5 @@
 from db import createCamera, createLocation, findLocationByCameraId, updateLocation
-from pos import getCurrentLatLng
+from utils.pos import getCurrentLatLng
 import json
 import os
 
