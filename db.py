@@ -108,6 +108,13 @@ def createGenderLog(log: dict, db: Session = next(getDatabase())):
     db.refresh(genderLog)
     return genderLog
 
+def listGenderLog(quantity: int, db: Session = next(getDatabase())):
+    log = db.query(GenderLog).order_by(desc(GenderLog.detectedAt)).limit(quantity)
+    if not log:
+        print("Gender log cannot list")
+        return
+    return log
+
 def findGenderLog(id: int, db: Session = next(getDatabase())):
     log = db.query(GenderLog).filter(GenderLog.logId == id).first()
     if not log:

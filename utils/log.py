@@ -1,4 +1,4 @@
-from rich.console import Console 
+from rich.console import Console
 from utils.time import utcToThai
 from sqlalchemy import Column
 from datetime import datetime
@@ -21,7 +21,7 @@ def printGenderLog(gender: str, utcTimestamp: Column[datetime]):
     
     timeStyle = timeLogStyle(str(utcTimestamp))
     console.print(f"[{timeStyle}] found {genderStyle}")
-
+    
 def printQuitLog():
     console.print(f"\n[bold {quitTextColor} on {quitBgColor}] Quit! [/]")
 
