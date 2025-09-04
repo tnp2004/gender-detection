@@ -1,10 +1,12 @@
+import logging
+logging.getLogger('tensorflow').setLevel(logging.ERROR)
 from ultralytics import YOLO
 from deepface import DeepFace
 from db import createGenderLog, findLocationByCameraId, activeCamera, inactiveCamera
 from file import getMetadata
 from utils.log import printGenderLog, printQuitLog
-import cv2
 from enum import Enum
+import cv2
 
 class Gender(Enum):
     MAN = "Man"
