@@ -52,7 +52,10 @@ while cap.isOpened():
                 if trackId not in peopleData:
                     croppedFrame = frame[y1:y2, x1:x2]
                     result = DeepFace.analyze(croppedFrame, actions=["gender"], enforce_detection=False)
-                    gender = Gender.MAN.value if result[0]["gender"]["Man"] > result[0]["gender"]["Woman"] else Gender.WOMAN.value
+                    genderResult = result[0]["gender"]
+                    manPercent = genderResult["Man"]
+                    womanPercent = genderResult["Woman"]
+                    gender = Gender.MAN.value if manPercent > womanPercent else Gender.WOMAN.value
                     peopleData[trackId] = gender
                     genderLog = addGenderLog(gender)
                     printGenderLog(gender, genderLog.detectedAt)
