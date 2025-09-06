@@ -1,9 +1,9 @@
-import { Button } from "@mui/joy";
+import Navbar from "@/components/Navbar";
 
 export default function Home() {
   return (
     <div>
-      <Button>Homepage</Button>
+      <Navbar />
     </div>
   );
 }
