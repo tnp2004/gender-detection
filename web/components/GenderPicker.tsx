@@ -1,11 +1,7 @@
 "use client"
 
+import { Gender } from "@/types/db";
 import { useState } from "react"
-
-enum Gender {
-    Man = "man",
-    Woman = "woman"
-}
 
 export default function GenderPicker() {
   const [gender, setGender] = useState<string | undefined>();

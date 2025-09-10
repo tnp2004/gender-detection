@@ -4,6 +4,18 @@ export enum Table {
     GenderLog = "genderLog"
 }
 
+export enum Gender {
+    Man = "Man",
+    Woman = "Woman"
+}
+
 export interface Counting {
     count: number
+}
+
+export interface GenderLog {
+    logId: string,
+    gender: Gender,
+    locationId: string,
+    detectedAt: string
 }

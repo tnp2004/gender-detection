@@ -1,10 +1,10 @@
-import { Counting, Table } from "@/types/db"
+import { Counting, GenderLog, Table } from "@/types/db"
 import { sql } from "./db"
 
 const table = Table.GenderLog
 
 export const getGenderLogs = async () => {
-    const result = await sql`SELECT * FROM ${sql(table)}`
+    const result = await sql`SELECT * FROM ${sql(table)}` as GenderLog[]
     return result ?? []
 }
 
