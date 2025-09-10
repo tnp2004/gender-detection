@@ -1,12 +1,11 @@
-import { Dispatch, SetStateAction } from "react";
+"use client"
+
+import { useState } from "react";
 import { DayPicker } from "react-day-picker";
 
-interface Props {
-  date: Date | undefined;
-  setDate: Dispatch<SetStateAction<Date | undefined>>
-}
-
-export default function DatePicker({ date, setDate }: Props) {
+export default function DatePicker() {
+  const [date, setDate] = useState<Date | undefined>();
+  
   return (
     <>
       <button popoverTarget="rdp-popover" className="input input-border w-fit" style={{ anchorName: "--rdp" } as React.CSSProperties}>

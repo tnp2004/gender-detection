@@ -1,19 +1,18 @@
-"use client"
-
+import Dashboard from "@/components/Dashboard";
 import DatePicker from "@/components/DatePicker";
 import GenderPicker from "@/components/GenderPicker";
-import { useState } from "react";
+import { countGenderLogs } from "@/database/genderLog";
 
 export default function Home() {
-  const [date, setDate] = useState<Date | undefined>();
-  const [gender, setGender] = useState<string | undefined>();
-
+  const genderLogsPromise = countGenderLogs()
+  
   return (
     <>
       <div className="flex gap-x-1 m-1">
-        <DatePicker date={date} setDate={setDate} />
-        <GenderPicker gender={gender} setGender={setGender} />
+        <DatePicker/>
+        <GenderPicker/>
       </div>
+      <Dashboard genderLogsPromise={genderLogsPromise} />
     </>
   );
 }

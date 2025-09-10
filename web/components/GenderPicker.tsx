@@ -1,16 +1,15 @@
-import { Dispatch, SetStateAction } from "react"
+"use client"
+
+import { useState } from "react"
 
 enum Gender {
     Man = "man",
     Woman = "woman"
 }
 
-interface Props {
-    gender: string | undefined,
-    setGender: Dispatch<SetStateAction<string | undefined>>
-}
-
-export default function GenderPicker({ gender, setGender }: Props) {
+export default function GenderPicker() {
+  const [gender, setGender] = useState<string | undefined>();
+    
     const handleGenderChange = (selectedGender: Gender) => {
         if (gender === selectedGender) return setGender(undefined)
         setGender(selectedGender);
