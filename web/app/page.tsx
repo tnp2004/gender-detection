@@ -1,10 +1,10 @@
 import Dashboard from "@/components/Dashboard";
 import DatePicker from "@/components/DatePicker";
 import GenderPicker from "@/components/GenderPicker";
-import { countGenderLogs } from "@/database/genderLog";
+import { getGenderLogs } from "@/database/genderLog";
 
 export default function Home() {
-  const genderLogsPromise = countGenderLogs()
+  const genderLogs= getGenderLogs()
   
   return (
     <>
@@ -12,7 +12,7 @@ export default function Home() {
         <DatePicker/>
         <GenderPicker/>
       </div>
-      <Dashboard genderLogsPromise={genderLogsPromise} />
+      <Dashboard genderLogs={genderLogs} />
     </>
   );
 }

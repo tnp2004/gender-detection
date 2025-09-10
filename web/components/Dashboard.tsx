@@ -1,19 +1,20 @@
 "use client"
 
-import { Counting } from "@/types/db"
+import { GenderLog } from "@/types/db"
 import { Suspense, use } from "react"
+import CountingCard from "./CountingCard"
 
 interface Props {
-    genderLogsPromise: Promise<Counting>
+    genderLogs: Promise<GenderLog[]>
 }
 
-export default function Dashboard({ genderLogsPromise }: Props) {
-    const genderLogs = use(genderLogsPromise)
+export default function Dashboard({ genderLogs }: Props) {
+    const genderLogsData = use(genderLogs)
 
     return (
         <>
             <Suspense fallback={<p>loading . . .</p>}>
-                {JSON.stringify(genderLogs)}
+                <CountingCard title="จำนวน" amount={genderLogsData.length} />
             </Suspense>
         </>
     )
