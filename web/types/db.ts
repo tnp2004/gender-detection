@@ -17,5 +17,5 @@ export interface GenderLog {
     logId: string,
     gender: Gender,
     locationId: string,
-    detectedAt: string
+    detectedAt: Date
 }
