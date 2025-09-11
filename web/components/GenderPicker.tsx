@@ -14,16 +14,16 @@ export default function GenderPicker() {
     return (
         <div className="join">
             <input 
-                onChange={() => handleGenderChange(Gender.Man)} 
-                checked={gender === Gender.Man} 
+                onChange={() => handleGenderChange("Man")} 
+                checked={gender === "Man"} 
                 className="join-item btn checked:bg-sky-400 border-0" 
                 type="checkbox" 
                 name="options" 
                 aria-label="ชาย"  
             />
             <input 
-                onChange={() => handleGenderChange(Gender.Woman)} 
-                checked={gender === Gender.Woman} 
+                onChange={() => handleGenderChange("Woman")} 
+                checked={gender === "Woman"} 
                 className="join-item btn checked:bg-pink-400 border-0" 
                 type="checkbox" 
                 name="options" 

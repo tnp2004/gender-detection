@@ -1,15 +1,17 @@
-import { Counting, Table } from "@/types/db"
+import * as z from "zod"
+import { cameraSchema, countingSchema, tableSchema } from "@/schemas/db"
 import { sql } from "./db"
 
-const table = Table.Camera
+const table = tableSchema.enum.camera
 
 export const getCameras = async () => {
     const result = await sql`SELECT * FROM ${sql(table)}`
-    return result ?? []
+    const cameras = z.array(cameraSchema)
+    return cameras.parseAsync(result)
 }
 
 export const countCameras = async () => {
     let [result] = await sql`SELECT COUNT(*) FROM ${sql(table)}`
-    result.count = Number(result.count)
-    return result as Promise<Counting>
+    const couting = z.promise(countingSchema)
+    return couting.parseAsync(result)
 }

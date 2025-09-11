@@ -1,21 +1,11 @@
-export enum Table {
-    Location = "location",
-    Camera = "camera",
-    GenderLog = "genderLog"
-}
+import * as z from "zod"
+import { cameraSchema, countingSchema, genderLogSchema, genderSchema, tableSchema } from "@/schemas/db"
 
-export enum Gender {
-    Man = "Man",
-    Woman = "Woman"
-}
+export type Table = z.infer<typeof tableSchema>
+export type Gender = z.infer<typeof genderSchema>
+export type Counting = z.infer<typeof countingSchema>
 
-export interface Counting {
-    count: number
-}
-
-export interface GenderLog {
-    logId: string,
-    gender: Gender,
-    locationId: string,
-    detectedAt: Date
-}
+// Table
+export type GenderLog = z.infer<typeof genderLogSchema>
+export type Camera = z.infer<typeof cameraSchema>
+export type location = z.infer<typeof location>
