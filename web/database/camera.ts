@@ -3,9 +3,11 @@ import { cameraSchema, countingSchema, tableSchema } from "@/schemas/db"
 import { sql } from "./db"
 
 const table = tableSchema.enum.camera
+const limit = 10
 
-export const getCameras = async () => {
-    const result = await sql`SELECT * FROM ${sql(table)}`
+export const getCameras = async (page: number) => {
+    const offset = (page - 1) * limit
+    const result = await sql`SELECT * FROM ${sql(table)} ORDER BY "cameraId" DESC LIMIT ${limit} OFFSET ${offset}`
     const cameras = z.array(cameraSchema)
     return cameras.parseAsync(result)
 }

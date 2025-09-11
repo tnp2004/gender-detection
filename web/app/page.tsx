@@ -4,7 +4,7 @@ import GenderPicker from "@/components/GenderPicker";
 import { getGenderLogs } from "@/database/genderLog";
 
 export default function Home() {
-  const genderLogs= getGenderLogs()
+  const genderLogs= getGenderLogs(1)
   
   return (
     <>
