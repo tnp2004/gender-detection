@@ -23,7 +23,7 @@ export default function GenderLogsTable({ genderLogs }: Props) {
                                 <th>{log.logId}</th>
                                 <td>{log.gender}</td>
                                 <td>{log.locationId}</td>
-                                <td>{log.detectedAt.toDateString()}</td>
+                                <td>{log.detectedAt.toLocaleString()}</td>
                             </tr>
                         ))}
                     </tbody>

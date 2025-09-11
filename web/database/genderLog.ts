@@ -1,3 +1,5 @@
+"use server"
+
 import * as z from "zod"
 import { genderLogSchema, tableSchema, countingSchema } from "@/schemas/db"
 import { sql } from "./db"
@@ -14,6 +16,7 @@ export const getGenderLogs = async (page: number) => {
 
 export const countGenderLogs = async () => {
     let [result] = await sql`SELECT COUNT(*) FROM ${sql(table)}`
+    result.count = Number(result.count)
     const counting = z.promise(countingSchema)
     return counting.parseAsync(result)
 }

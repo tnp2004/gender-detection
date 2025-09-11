@@ -14,6 +14,7 @@ export const getCameras = async (page: number) => {
 
 export const countCameras = async () => {
     let [result] = await sql`SELECT COUNT(*) FROM ${sql(table)}`
+    result.count = Number(result.count)
     const couting = z.promise(countingSchema)
     return couting.parseAsync(result)
 }
