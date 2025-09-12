@@ -6,8 +6,8 @@ export default function Home() {
   return (
     <>
       <div className="flex gap-x-1 m-1">
-        <DatePicker/>
-        <GenderPicker/>
+        <DatePicker />
+        <GenderPicker />
       </div>
       <Dashboard />
     </>

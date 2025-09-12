@@ -1,36 +1,19 @@
 "use client"
 
-import { GenderLog } from "@/types/db"
-import { Suspense, useEffect, useState } from "react"
+import { Suspense } from "react"
 import CountingCard from "./CountingCard"
 import GenderLogsTable from "./GenderLogsTable"
-import { countGenderLogs, getGenderLogs } from "@/database/genderLog"
+import PieChart from "./PieChart"
 
 export default function Dashboard() {
-    const [page, setPage] = useState(1)
-    const [genderLogs, setGenderLogs] = useState<GenderLog[]>([])
-    const [count, setCount] = useState<number>(0)
-
-    const fetchGenderLogsByPage = async (pageNumber: number) => {
-        const genderLogsData = await getGenderLogs(pageNumber)
-        const countData = await countGenderLogs()
-        setGenderLogs(genderLogsData)
-        setCount(countData.count)
-    }
-
-    useEffect(() => { fetchGenderLogsByPage(page) }, [page])
 
     return (
-        <>
+        <div className="grid grid-cols-4 container mx-auto align-center">
             <Suspense fallback={<p>loading . . .</p>}>
-                <CountingCard title="จำนวน" amount={count} />
-                <GenderLogsTable genderLogs={genderLogs} />
-                <div className="join mt-1">
-                    <button className="join-item btn" onClick={() => {if(page > 1) setPage(page - 1)}}>⇽</button>
-                    <button className="join-item btn">Page {page}</button>
-                    <button className="join-item btn" onClick={() => setPage(page + 1)}>⇾</button>
-                </div>
+                <CountingCard title="จำนวน" />
+                <GenderLogsTable />
+                <PieChart />
             </Suspense>
-        </>
+        </div>
     )
 }

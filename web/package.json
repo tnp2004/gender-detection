@@ -8,12 +8,14 @@
     "start": "next start"
   },
   "dependencies": {
+    "apexcharts": "^5.3.5",
     "daisyui": "^5.1.7",
     "dotenv": "^17.2.2",
     "next": "15.5.2",
     "postcss": "^8.5.6",
     "postgres": "^3.4.7",
     "react": "19.1.0",
+    "react-apexcharts": "^1.7.0",
     "react-day-picker": "^9.9.0",
     "react-dom": "19.1.0",
     "zod": "^4.1.5"
