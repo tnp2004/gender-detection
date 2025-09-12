@@ -19,7 +19,7 @@ export default function GenderLogsTable({ genderLogs }: Props) {
                     </thead>
                     <tbody>
                         {genderLogs.map(log => (
-                            <tr key={log.logId}>
+                            <tr className="text-center" key={log.logId}>
                                 <th>{log.logId}</th>
                                 <td>{log.gender}</td>
                                 <td>{log.locationId}</td>

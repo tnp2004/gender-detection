@@ -25,7 +25,11 @@ export default function Dashboard() {
             <Suspense fallback={<p>loading . . .</p>}>
                 <CountingCard title="จำนวน" amount={count} />
                 <GenderLogsTable genderLogs={genderLogs} />
-                <button onClick={() => setPage(page + 1)}>next page</button>
+                <div className="join mt-1">
+                    <button className="join-item btn" onClick={() => {if(page > 1) setPage(page - 1)}}>⇽</button>
+                    <button className="join-item btn">Page {page}</button>
+                    <button className="join-item btn" onClick={() => setPage(page + 1)}>⇾</button>
+                </div>
             </Suspense>
         </>
     )
