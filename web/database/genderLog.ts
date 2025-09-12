@@ -24,7 +24,7 @@ export const countGenderLogs = async () => {
 
 export const countAllGender = async () => {
     const result = await sql`SELECT gender, COUNT(*) as count FROM ${sql(table)} GROUP BY gender`
-    const resultFormatted = {} as GenderCouting
+    const resultFormatted = { man: 0, woman: 0 } as GenderCouting
     result.map((v) => {
         if (v.gender == "Man") resultFormatted.man = Number(v.count)
         if (v.gender == "Woman") resultFormatted.woman = Number(v.count)
