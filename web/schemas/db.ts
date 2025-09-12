@@ -3,6 +3,7 @@ import * as z from "zod"
 export const tableSchema = z.enum(["location", "camera", "genderLog"])
 export const genderSchema = z.enum(["Man", "Woman"])
 export const countingSchema = z.object({ count: z.number() })
+export const genderCountingSchema = z.object({ man: z.number(), woman: z.number() })
 
 // Table
 export const genderLogSchema = z.object({

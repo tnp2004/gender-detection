@@ -1,31 +1,36 @@
 "use client"
 
+import { countAllGender } from "@/database/genderLog";
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 export default function PieChart() {
+  const [series, setSeries] = useState([0, 0]);
+
+  const fetchGenderCouting = async () => {
+    const data = await countAllGender()
+    setSeries([data.man, data.woman])
+  }
+
   const [options] = useState<ApexOptions>({
-    chart: {
-      id: "basic-pie",
-    },
     labels: ["Man", "Woman"],
     legend: {
       position: "right",
     },
   });
 
-  const [series] = useState([30, 70]);
+  useEffect(() => { fetchGenderCouting() }, [])
 
   return (
-    <div className="w-full max-w-lg mx-auto">
-      <ApexChart 
-      options={options} 
-      series={series} 
-      type="pie" 
-      width={300}
+    <div className="card shadow-sm w-fit h-fit max-w-lg">
+      <ApexChart
+        options={options}
+        series={series}
+        type="pie"
+        width={300}
       />
     </div>
   );
