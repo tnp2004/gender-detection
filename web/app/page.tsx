@@ -1,15 +1,16 @@
+"use client"
+
+import { useState } from "react";
 import Dashboard from "@/components/Dashboard";
 import DatePicker from "@/components/DatePicker";
-import GenderPicker from "@/components/GenderPicker";
 
 export default function Home() {
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+
   return (
     <>
-      <div className="flex gap-x-1 m-1">
-        <DatePicker />
-        <GenderPicker />
-      </div>
-      <Dashboard />
+      <DatePicker onDateChange={setSelectedDate} />
+      <Dashboard selectedDate={selectedDate} />
     </>
   );
 }

@@ -18,3 +18,11 @@ export const countLocations = async () => {
     const couting = z.promise(countingSchema)
     return couting.parseAsync(result)
 }
+
+export const getLocationById = async (locationId: string) => {
+    const result = await sql`SELECT * FROM ${sql(table)} WHERE "locationId" = ${locationId}`
+    if (result.length > 0) {
+        return locationSchema.parseAsync(result[0])
+    }
+    return null
+}

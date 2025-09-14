@@ -7,30 +7,35 @@ import { useEffect, useState } from "react";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
-export default function PieChart() {
+interface Props {
+  selectedDate?: Date;
+}
+
+export default function PieChart({ selectedDate }: Props) {
   const [series, setSeries] = useState([0, 0]);
 
   const fetchGenderCouting = async () => {
-    const data = await countAllGender()
+    const data = await countAllGender(selectedDate)
     setSeries([data.man, data.woman])
   }
 
-  const [options] = useState<ApexOptions>({
-    labels: ["Man", "Woman"],
+  const options: ApexOptions = {
+    labels: ["ผู้ชาย", "ผู้หญิง"],
     legend: {
-      position: "right",
+      position: "bottom",
     },
-  });
+    colors: ["#3B82F6", "#EC4899"],
+  };
 
-  useEffect(() => { fetchGenderCouting() }, [])
+  useEffect(() => { fetchGenderCouting() }, [selectedDate])
 
   return (
-    <div className="card shadow-sm w-fit h-fit max-w-lg">
+    <div className="card shadow-sm w-full h-full max-w-lg col-span-1">
       <ApexChart
+      className="my-auto"
         options={options}
         series={series}
         type="pie"
-        width={300}
       />
     </div>
   );

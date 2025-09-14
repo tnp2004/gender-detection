@@ -3,8 +3,17 @@
 import { useState } from "react";
 import { DayPicker } from "react-day-picker";
 
-export default function DatePicker() {
+interface Props {
+    onDateChange?: (date: Date | undefined) => void;
+}
+
+export default function DatePicker({ onDateChange }: Props) {
   const [date, setDate] = useState<Date | undefined>();
+  
+  const handleDateSelect = (selectedDate: Date | undefined) => {
+    setDate(selectedDate);
+    onDateChange?.(selectedDate);
+  };
   
   return (
     <>
@@ -12,7 +21,7 @@ export default function DatePicker() {
         {date ? date.toLocaleDateString() : "เลือกวันที่"}
       </button>
       <div popover="auto" id="rdp-popover" className="dropdown" style={{ positionAnchor: "--rdp" } as React.CSSProperties}>
-        <DayPicker className="react-day-picker" mode="single" selected={date} onSelect={setDate} />
+        <DayPicker className="react-day-picker" mode="single" selected={date} onSelect={handleDateSelect} />
       </div>
     </>
   );
