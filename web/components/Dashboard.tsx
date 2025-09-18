@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import CountingCard from "./CountingCard"
 import { countAllGender } from "@/database/genderLog"
 import CountGenderCard from "./CountGenderCard"
+import GenderRatioCard from "./GenderRatioCard"
 import { GenderCouting } from "@/types/db"
 import GenderLogsTable from "./GenderLogsTable"
 import PieChart from "./PieChart"
@@ -31,7 +32,7 @@ export default function Dashboard() {
                 <CountingCard title="จำนวนทั้งหมด" selectedDate={selectedDate} />
                 <CountGenderCard title="จำนวนผู้ชาย" amount={genderCounting.man} />
                 <CountGenderCard title="จำนวนผู้หญิง" amount={genderCounting.woman} />
-                <CountGenderCard title="จำนวนผู้หญิง" amount={genderCounting.woman} />
+                <GenderRatioCard title="สัดส่วน" genderCounting={genderCounting} />
             </div>
             <div className="col-span-4 grid grid-cols-4 gap-2">
                 <DailyGenderChart selectedDate={selectedDate} />
