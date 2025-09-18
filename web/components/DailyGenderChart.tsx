@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { getHourlyGenderStats } from "@/database/genderLog";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
+const REFRESH_INTERVAL = 60 * 2 * 1000;
 
 interface Props {
     selectedDate?: Date;
@@ -139,8 +140,7 @@ export default function DailyGenderChart({ selectedDate }: Props) {
 
   useEffect(() => { 
     fetchDailyData();
-    // Refresh data every 2 minutes for real-time updates
-    const interval = setInterval(fetchDailyData, 120000);
+    const interval = setInterval(fetchDailyData, REFRESH_INTERVAL);
     return () => clearInterval(interval);
   }, [selectedDate]);
 
