@@ -97,3 +97,16 @@ export const getHourlyGenderStats = async (selectedDate?: Date) => {
     `
     return result
 }
+
+export const getDailyGenderStats = async () => {
+    const result = await sql`
+        SELECT 
+            DATE("detectedAt" + INTERVAL '7 hours') as date,
+            COUNT(*) as count
+        FROM ${sql(table)}
+        GROUP BY DATE("detectedAt" + INTERVAL '7 hours')
+        ORDER BY date DESC
+        LIMIT 30
+    `
+    return result
+}

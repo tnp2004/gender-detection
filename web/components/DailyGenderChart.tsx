@@ -3,7 +3,7 @@
 import { ApexOptions } from "apexcharts";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
-import { getHourlyGenderStats } from "@/database/genderLog";
+import { getHourlyGenderStats, getDailyGenderStats } from "@/database/genderLog";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 const REFRESH_INTERVAL = 60 * 2 * 1000;
@@ -24,40 +24,70 @@ export default function DailyGenderChart({ selectedDate }: Props) {
     }
   ]);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState<string[]>([]);
 
   const fetchDailyData = async () => {
     try {
       setLoading(true);
       
-      // Fetch real data from database with selected date
-      const hourlyStats = await getHourlyGenderStats(selectedDate);
-      
-      // Initialize arrays for 24 hours
-      const menData = Array(24).fill(0);
-      const womenData = Array(24).fill(0);
-      
-      // Process the database results
-      hourlyStats.forEach((stat: any) => {
-        const hour = parseInt(stat.hour);
-        const count = parseInt(stat.count);
+      if (selectedDate) {
+        // Fetch hourly data for selected date
+        const hourlyStats = await getHourlyGenderStats(selectedDate);
         
-        if (stat.gender === 'Man') {
-          menData[hour] = count;
-        } else if (stat.gender === 'Woman') {
-          womenData[hour] = count;
-        }
-      });
-      
-      setSeries([
-        {
-          name: "ผู้ชาย",
-          data: menData
-        },
-        {
-          name: "ผู้หญิง",
-          data: womenData
-        }
-      ]);
+        // Initialize arrays for 24 hours
+        const menData = Array(24).fill(0);
+        const womenData = Array(24).fill(0);
+        
+        // Process the database results
+        hourlyStats.forEach((stat: any) => {
+          const hour = parseInt(stat.hour);
+          const count = parseInt(stat.count);
+          
+          if (stat.gender === 'Man') {
+            menData[hour] = count;
+          } else if (stat.gender === 'Woman') {
+            womenData[hour] = count;
+          }
+        });
+        
+        setSeries([
+          {
+            name: "ผู้ชาย",
+            data: menData
+          },
+          {
+            name: "ผู้หญิง",
+            data: womenData
+          }
+        ]);
+        setCategories(Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`));
+      } else {
+        // Fetch daily data for all dates
+        const dailyStats = await getDailyGenderStats();
+        
+        // Sort dates (already sorted from database but ensure ascending order for chart)
+        const sortedStats = dailyStats.sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+        // Extract data directly since each date now has only one count
+        const totalData = sortedStats.map((stat: any) => parseInt(stat.count));
+        
+        setSeries([
+          {
+            name: "จำนวนทั้งหมด",
+            data: totalData
+          }
+        ]);
+        
+        // Format dates for display
+        const formattedDates = sortedStats.map((stat: any) => {
+          const dateObj = new Date(stat.date);
+          return dateObj.toLocaleDateString('th-TH', { 
+            month: 'short', 
+            day: 'numeric' 
+          });
+        });
+        setCategories(formattedDates);
+      }
     } catch (error) {
       console.error('Error fetching daily data:', error);
     } finally {
@@ -65,7 +95,7 @@ export default function DailyGenderChart({ selectedDate }: Props) {
     }
   };
 
-  const options: ApexOptions = {
+  const getOptions = (): ApexOptions => ({
     chart: {
       type: 'line',
       height: 300,
@@ -74,13 +104,13 @@ export default function DailyGenderChart({ selectedDate }: Props) {
       },
       background: 'transparent'
     },
-    colors: ['#3B82F6', '#EC4899'],
+    colors: selectedDate ? ['#3B82F6', '#EC4899'] : ['#10B981'],
     stroke: {
       curve: 'smooth',
       width: 3
     },
     xaxis: {
-      categories: Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`),
+      categories: categories,
       labels: {
         style: {
           colors: '#6B7280',
@@ -128,7 +158,7 @@ export default function DailyGenderChart({ selectedDate }: Props) {
             month: 'long', 
             day: 'numeric' 
           })}`
-        : 'วันนี้',
+        : 'จำนวนที่พบทั้งหมดตามวันที่',
       align: 'left',
       style: {
         fontSize: '16px',
@@ -136,7 +166,7 @@ export default function DailyGenderChart({ selectedDate }: Props) {
         color: '#374151'
       }
     }
-  };
+  });
 
   useEffect(() => { 
     fetchDailyData();
@@ -161,7 +191,7 @@ export default function DailyGenderChart({ selectedDate }: Props) {
     <div className="card shadow-sm w-full col-span-3">
       <div className="card-body">
         <ApexChart
-          options={options}
+          options={getOptions()}
           series={series}
           type="line"
           height={300}
