@@ -1,9 +1,5 @@
 "use client"
 
-import { countAllGender } from "@/database/genderLog"
-import { GenderCouting } from "@/types/db"
-import { useEffect, useState } from "react"
-
 interface Props {
     title: string,
     amount: number,

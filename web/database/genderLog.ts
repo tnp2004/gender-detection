@@ -1,7 +1,7 @@
 "use server"
 
 import * as z from "zod"
-import { genderLogSchema, tableSchema, countingSchema, genderCountingSchema } from "@/schemas/db"
+import { tableSchema, countingSchema, genderCountingSchema } from "@/schemas/db"
 import { sql } from "./db"
 import { GenderCouting } from "@/types/db"
 
