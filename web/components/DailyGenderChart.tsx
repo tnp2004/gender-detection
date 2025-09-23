@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { getHourlyGenderStats, getDailyGenderStats } from "@/database/genderLog";
 
 const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
-const REFRESH_INTERVAL = 60 * 2 * 1000;
+const REFRESH_INTERVAL = 60 * 1000;
 
 interface Props {
     selectedDate?: Date;

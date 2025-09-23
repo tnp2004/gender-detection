@@ -5,9 +5,10 @@ import { GenderCouting } from "@/types/db"
 interface Props {
     title: string;
     genderCounting: GenderCouting;
+    isLoading?: boolean;
 }
 
-export default function GenderRatioCard({ title, genderCounting }: Props) {
+export default function GenderRatioCard({ title, genderCounting, isLoading = false }: Props) {
     const { man, woman } = genderCounting;
     const total = man + woman;
     
@@ -18,15 +19,20 @@ export default function GenderRatioCard({ title, genderCounting }: Props) {
         <div className="card w-full h-fit shadow-sm px-3">
             <div className="card-body text-center">
                 <h2 className="text-slate-600">{title}</h2>
-                <div>
-                    <div className="text-sm text-slate-600 font-bold">
-                        ผู้ชาย: <span className="font-bold text-blue-600">{manRatio}%</span>
+                {isLoading ? (
+                    <div className="flex justify-center">
+                        <span className="loading loading-spinner loading-md"></span>
                     </div>
-                    <div className="text-sm text-slate-600 font-bold">
-                        ผู้หญิง: <span className="font-bold text-pink-600">{womanRatio}%</span>
+                ) : (
+                    <div>
+                        <div className="text-sm text-slate-600 font-bold">
+                            ผู้ชาย: <span className="font-bold text-blue-600">{manRatio}%</span>
+                        </div>
+                        <div className="text-sm text-slate-600 font-bold">
+                            ผู้หญิง: <span className="font-bold text-pink-600">{womanRatio}%</span>
+                        </div>
                     </div>
-                   
-                </div>
+                )}
             </div>
         </div>
     )
