@@ -15,13 +15,11 @@ interface GenderLogWithLocation extends GenderLog {
 export default function GenderLogsTable({ selectedDate }: Props) {
     const [page, setPage] = useState(1)
     const [genderLogs, setGenderLogs] = useState<GenderLogWithLocation[]>([])
-    const [totalCount, setTotalCount] = useState(0)
     const [maxPage, setMaxPage] = useState(1)
 
     const fetchGenderLogsByPage = async (pageNumber: number) => {
         const genderLogsData = await getGenderLogs(pageNumber, selectedDate)
         
-        // Data already includes locationName from JOIN query
         const logsWithLocationNames = genderLogsData.map((log: any) => ({
             logId: log.logId,
             gender: log.gender,
@@ -35,12 +33,21 @@ export default function GenderLogsTable({ selectedDate }: Props) {
 
     const fetchTotalCount = async () => {
         const countData = await countGenderLogs(selectedDate)
-        setTotalCount(countData.count)
-        setMaxPage(Math.ceil(countData.count / 10)) // Assuming 10 items per page
+        setMaxPage(Math.ceil(countData.count / 10))
+    }
+
+    const formatDate = (date: Date) => {
+        return new Date(date).toLocaleDateString('th-TH', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
     }
 
     useEffect(() => { 
-        setPage(1) // Reset to page 1 when date changes
+        setPage(1)
         fetchTotalCount()
         fetchGenderLogsByPage(1) 
     }, [selectedDate])
@@ -66,7 +73,7 @@ export default function GenderLogsTable({ selectedDate }: Props) {
                                     <th>{log.logId}</th>
                                     <td>{log.gender === 'Man' ? 'ผู้ชาย' : 'ผู้หญิง'}</td>
                                     <td>{log.locationName == "Location not specified" ? "ไม่ได้ระบุชื่อสถานที่" : log.locationName}</td>
-                                    <td>{log.detectedAt.toLocaleString('th-TH')}</td>
+                                    <td>{formatDate(log.detectedAt)}</td>
                                 </tr>
                             ))
                         ) : (
@@ -76,7 +83,6 @@ export default function GenderLogsTable({ selectedDate }: Props) {
                                 </td>
                             </tr>
                         )}
-                        {/* Fill remaining rows to maintain consistent height */}
                         {Array.from({ length: Math.max(0, 10 - genderLogs.length) }).map((_, index) => (
                             <tr key={`empty-${index}`} className="h-12">
                                 <td>&nbsp;</td>

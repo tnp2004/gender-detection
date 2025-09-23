@@ -1,5 +1,5 @@
 import * as z from "zod"
-import { cameraSchema, countingSchema, genderCountingSchema, genderLogSchema, genderSchema, tableSchema } from "@/schemas/db"
+import { cameraSchema, countingSchema, genderCountingSchema, genderLogSchema, genderSchema, tableSchema, locationSchema } from "@/schemas/db"
 
 export type Table = z.infer<typeof tableSchema>
 export type Gender = z.infer<typeof genderSchema>
@@ -9,4 +9,4 @@ export type GenderCouting = z.infer<typeof genderCountingSchema>
 // Table
 export type GenderLog = z.infer<typeof genderLogSchema>
 export type Camera = z.infer<typeof cameraSchema>
-export type location = z.infer<typeof location>
+export type Location = z.infer<typeof locationSchema>
