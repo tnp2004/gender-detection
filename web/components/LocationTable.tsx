@@ -54,7 +54,7 @@ export default function LocationTable() {
         return (
             <div className="card w-full shadow-sm">
                 <div className="card-body">
-                    <h2 className="card-title">ตารางตำแหน่ง</h2>
+                    <h2 className="card-title">ตำแหน่ง</h2>
                     <div className="flex justify-center items-center h-32">
                         <span className="loading loading-spinner loading-lg"></span>
                     </div>
@@ -67,7 +67,7 @@ export default function LocationTable() {
         <div className="card w-full shadow-sm">
             <div className="card-body">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="card-title">ตารางตำแหน่ง</h2>
+                    <h2 className="card-title">ตำแหน่ง</h2>
                     <div className="text-sm text-gray-500">
                         ทั้งหมด {locationData.totalCount} ตำแหน่ง
                     </div>
