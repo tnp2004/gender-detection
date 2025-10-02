@@ -6,6 +6,8 @@ from db import createGenderLog, findLocationByCameraId, activeCamera, inactiveCa
 from file import getMetadata
 from utils.log import printGenderLog, printQuitLog
 from enum import Enum
+from insightface.app import FaceAnalysis
+import time
 
 import cv2
 
@@ -15,13 +17,33 @@ class Gender(Enum):
 
 NAME = "Gender detector"
 
-model = YOLO("yolo12n.pt")
+MAX_WINDOW_WIDTH_SIZE = 1280
+MAX_WINDOW_HEIGHT_SIZE = 720
+
+YOLO_MODEL = "yolo12n.pt"
+
+model = YOLO(YOLO_MODEL)
 classList = model.names
 
 metadata = getMetadata()
 
+def getWindowSize():
+    capWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    capHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    w = capWidth if capWidth <= MAX_WINDOW_WIDTH_SIZE else MAX_WINDOW_WIDTH_SIZE
+    h = capHeight if capHeight <= MAX_WINDOW_HEIGHT_SIZE else MAX_WINDOW_HEIGHT_SIZE
+    return w, h
+
 cap = cv2.VideoCapture(0)
-cv2.namedWindow(NAME)
+cv2.namedWindow(NAME, cv2.WINDOW_NORMAL)
+w, h = getWindowSize()
+cv2.resizeWindow(NAME, w, h)
+
+app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
+app.prepare(ctx_id=-1, det_size = (640, 640))
+
+prevFrameTime = 0
+newFrameTime = 0
 
 peopleData = {}
 
@@ -34,8 +56,15 @@ while cap.isOpened():
     activeCamera(metadata["cameraId"])
     if not ret: break
 
+    newFrameTime = time.time()
+    fps = 1 / (newFrameTime - prevFrameTime)
+    prevFrameTime = newFrameTime
+    fpsText = str(int(fps))
+
+    cv2.putText(frame, fpsText, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
+
     try:
-        results = model.track(frame, persist=True, classes=[0], device=0, verbose=False, conf=0.8)
+        results = model.track(frame, persist=True, classes=[0], device=0, verbose=False, conf=0.6)
         data = results[0].boxes
         if data is not None and data.is_track:
             boxes = data.xyxy.cpu()
@@ -46,19 +75,28 @@ while cap.isOpened():
                 x1, y1, x2, y2 = map(int, box)
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 genderLabel = peopleData[trackId] if trackId in peopleData else "analyzing"
-                label = f"ID: {trackId} {genderLabel}"
+                label = f"{genderLabel}"
                 cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_COMPLEX, 0.6, (0, 255, 0), 2)
 
                 if trackId not in peopleData:
-                    croppedFrame = frame[y1:y2, x1:x2]
-                    result = DeepFace.analyze(croppedFrame, actions=["gender"], enforce_detection=False)
-                    genderResult = result[0]["gender"]
-                    manPercent = genderResult["Man"]
-                    womanPercent = genderResult["Woman"]
-                    gender = Gender.MAN.value if manPercent > womanPercent else Gender.WOMAN.value
+                    margin = 20
+                    x1m = max(0, x1 - margin)
+                    y1m = max(0, y1 - margin)
+                    x2m = min(frame.shape[1], x2 + margin)
+                    y2m = min(frame.shape[0], y2 + margin)
+
+                    croppedFrame = frame[y1m:y2m, x1m:x2m]
+                    faces = app.get(croppedFrame)
+                    if not faces: 
+                        continue
+
+                    face = faces[0]
+                    gender = Gender.MAN.value if face.gender == 1 else Gender.WOMAN.value
+
                     peopleData[trackId] = gender
                     genderLog = addGenderLog(gender)
                     printGenderLog(gender, genderLog.detectedAt)
+
     except Exception as e:
         match str(e):
             case "'NoneType' object has no attribute 'int'": pass
