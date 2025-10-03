@@ -17,7 +17,7 @@ NAME = "Gender detector"
 MAX_WINDOW_WIDTH_SIZE = 1280
 MAX_WINDOW_HEIGHT_SIZE = 720
 
-YOLO_MODEL = "yolov8n-person.pt"
+YOLO_MODEL = "yolo12m.pt"
 
 model = YOLO(YOLO_MODEL)
 classList = model.names
@@ -52,6 +52,12 @@ def addGenderLog(gender: str):
     latestCameraLocation = findLocationByCameraId(metadata["cameraId"])[0]
     return createGenderLog({"locationId": latestCameraLocation.locationId, "gender": gender})
 
+def drawTrackingBox(frame, trackId, pt1, pt2):
+    cv2.rectangle(frame, pt1, pt2, (0, 255, 0), 2)
+    genderLabel = peopleData[trackId] if trackId in peopleData else "analyzing"
+    label = f"{genderLabel}"
+    cv2.putText(frame, label, (pt1[0], pt1[1] - 10), cv2.FONT_HERSHEY_COMPLEX, 0.6, (0, 255, 0), 2)
+
 while cap.isOpened():
     ret, frame = cap.read()
     activeCamera(metadata["cameraId"])
@@ -60,7 +66,7 @@ while cap.isOpened():
     _, fw, _ = frame.shape
 
     try:
-        results = model.track(frame, persist=True, classes=[0], device=0, verbose=False, conf=0.7)
+        results = model.track(frame, persist=True, classes=[0], device=0, verbose=False, conf=0.2)
         data = results[0].boxes
         if data is not None and data.is_track:
             boxes = data.xyxy.cpu()
@@ -70,19 +76,14 @@ while cap.isOpened():
             for box, trackId, classIdx in zip(boxes, trackIds, classIndices):
                 x1, y1, x2, y2 = map(int, box)
                 if x1 > detectMargin and x2 < (fw - detectMargin):
-                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                    genderLabel = peopleData[trackId] if trackId in peopleData else "analyzing"
-                    label = f"{genderLabel}"
-                    cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_COMPLEX, 0.6, (0, 255, 0), 2)
-
                     if trackId not in peopleData:
                         boxMargin = 10
                         x1m = max(0, x1 - boxMargin)
                         y1m = max(0, y1 - boxMargin)
                         x2m = min(frame.shape[1], x2 + boxMargin)
                         y2m = min(frame.shape[0], y2 + boxMargin)
-
                         croppedFrame = frame[y1m:y2m, x1m:x2m]
+
                         cv2.imshow("Cropped frame", croppedFrame)
                         faces = app.get(croppedFrame)
                         if not faces: 
@@ -90,11 +91,10 @@ while cap.isOpened():
 
                         face = faces[0]
                         gender = genderClassification[face.gender].value
-
                         peopleData[trackId] = gender
                         genderLog = addGenderLog(gender)
                         printGenderLog(gender, genderLog.detectedAt)
-
+                    drawTrackingBox(frame, trackId, (x1, y1), (x2, y2))
     except Exception as e:
         match str(e):
             case "'NoneType' object has no attribute 'int'": pass
