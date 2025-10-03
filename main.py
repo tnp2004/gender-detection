@@ -1,7 +1,6 @@
 import logging
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
 from ultralytics import YOLO
-from deepface import DeepFace
 from db import createGenderLog, findLocationByCameraId, activeCamera, inactiveCamera
 from file import getMetadata
 from utils.log import printGenderLog, printQuitLog
@@ -20,7 +19,7 @@ NAME = "Gender detector"
 MAX_WINDOW_WIDTH_SIZE = 1280
 MAX_WINDOW_HEIGHT_SIZE = 720
 
-YOLO_MODEL = "yolo12n.pt"
+YOLO_MODEL = "yolov8x_person_face.pt"
 
 model = YOLO(YOLO_MODEL)
 classList = model.names
@@ -39,13 +38,16 @@ cv2.namedWindow(NAME, cv2.WINDOW_NORMAL)
 w, h = getWindowSize()
 cv2.resizeWindow(NAME, w, h)
 
-app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
-app.prepare(ctx_id=-1, det_size = (640, 640))
+app = FaceAnalysis(name="buffalo_l", providers=["CUDAExecutionProvider"])
+app.prepare(ctx_id=0, det_size = (640, 640))
 
 prevFrameTime = 0
 newFrameTime = 0
 
 peopleData = {}
+
+detectMarginRatio = 0.1 if w > 800 else 0
+detectMargin = w * detectMarginRatio
 
 def addGenderLog(gender: str):
     latestCameraLocation = findLocationByCameraId(metadata["cameraId"])[0]
@@ -55,6 +57,8 @@ while cap.isOpened():
     ret, frame = cap.read()
     activeCamera(metadata["cameraId"])
     if not ret: break
+
+    _, fw, _ = frame.shape
 
     newFrameTime = time.time()
     fps = 1 / (newFrameTime - prevFrameTime)
@@ -73,29 +77,30 @@ while cap.isOpened():
 
             for box, trackId, classIdx in zip(boxes, trackIds, classIndices):
                 x1, y1, x2, y2 = map(int, box)
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-                genderLabel = peopleData[trackId] if trackId in peopleData else "analyzing"
-                label = f"{genderLabel}"
-                cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_COMPLEX, 0.6, (0, 255, 0), 2)
+                if x1 > detectMargin and x2 < (fw - detectMargin):
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+                    genderLabel = peopleData[trackId] if trackId in peopleData else "analyzing"
+                    label = f"{genderLabel}"
+                    cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_COMPLEX, 0.6, (0, 255, 0), 2)
 
-                if trackId not in peopleData:
-                    margin = 20
-                    x1m = max(0, x1 - margin)
-                    y1m = max(0, y1 - margin)
-                    x2m = min(frame.shape[1], x2 + margin)
-                    y2m = min(frame.shape[0], y2 + margin)
+                    if trackId not in peopleData:
+                        boxMargin = 20
+                        x1m = max(0, x1 - boxMargin)
+                        y1m = max(0, y1 - boxMargin)
+                        x2m = min(frame.shape[1], x2 + boxMargin)
+                        y2m = min(frame.shape[0], y2 + boxMargin)
 
-                    croppedFrame = frame[y1m:y2m, x1m:x2m]
-                    faces = app.get(croppedFrame)
-                    if not faces: 
-                        continue
+                        croppedFrame = frame[y1m:y2m, x1m:x2m]
+                        faces = app.get(croppedFrame)
+                        if not faces: 
+                            continue
 
-                    face = faces[0]
-                    gender = Gender.MAN.value if face.gender == 1 else Gender.WOMAN.value
+                        face = faces[0]
+                        gender = Gender.MAN.value if face.gender == 1 else Gender.WOMAN.value
 
-                    peopleData[trackId] = gender
-                    genderLog = addGenderLog(gender)
-                    printGenderLog(gender, genderLog.detectedAt)
+                        peopleData[trackId] = gender
+                        genderLog = addGenderLog(gender)
+                        printGenderLog(gender, genderLog.detectedAt)
 
     except Exception as e:
         match str(e):
