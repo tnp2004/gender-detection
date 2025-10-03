@@ -6,8 +6,6 @@ from file import getMetadata
 from utils.log import printGenderLog, printQuitLog
 from enum import Enum
 from insightface.app import FaceAnalysis
-import time
-
 import cv2
 
 class Gender(Enum):
@@ -19,7 +17,7 @@ NAME = "Gender detector"
 MAX_WINDOW_WIDTH_SIZE = 1280
 MAX_WINDOW_HEIGHT_SIZE = 720
 
-YOLO_MODEL = "yolov8x_person_face.pt"
+YOLO_MODEL = "yolov8n-person.pt"
 
 model = YOLO(YOLO_MODEL)
 classList = model.names
@@ -36,7 +34,6 @@ def getWindowSize():
 cap = cv2.VideoCapture(0)
 cv2.namedWindow(NAME, cv2.WINDOW_NORMAL)
 w, h = getWindowSize()
-cv2.resizeWindow(NAME, w, h)
 
 app = FaceAnalysis(name="buffalo_l", providers=["CUDAExecutionProvider"])
 app.prepare(ctx_id=0, det_size = (640, 640))
@@ -49,6 +46,8 @@ peopleData = {}
 detectMarginRatio = 0.1 if w > 800 else 0
 detectMargin = w * detectMarginRatio
 
+genderClassification = [Gender.WOMAN, Gender.MAN]
+
 def addGenderLog(gender: str):
     latestCameraLocation = findLocationByCameraId(metadata["cameraId"])[0]
     return createGenderLog({"locationId": latestCameraLocation.locationId, "gender": gender})
@@ -60,15 +59,8 @@ while cap.isOpened():
 
     _, fw, _ = frame.shape
 
-    newFrameTime = time.time()
-    fps = 1 / (newFrameTime - prevFrameTime)
-    prevFrameTime = newFrameTime
-    fpsText = str(int(fps))
-
-    cv2.putText(frame, fpsText, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
-
     try:
-        results = model.track(frame, persist=True, classes=[0], device=0, verbose=False, conf=0.6)
+        results = model.track(frame, persist=True, classes=[0], device=0, verbose=False, conf=0.7)
         data = results[0].boxes
         if data is not None and data.is_track:
             boxes = data.xyxy.cpu()
@@ -84,19 +76,20 @@ while cap.isOpened():
                     cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_COMPLEX, 0.6, (0, 255, 0), 2)
 
                     if trackId not in peopleData:
-                        boxMargin = 20
+                        boxMargin = 10
                         x1m = max(0, x1 - boxMargin)
                         y1m = max(0, y1 - boxMargin)
                         x2m = min(frame.shape[1], x2 + boxMargin)
                         y2m = min(frame.shape[0], y2 + boxMargin)
 
                         croppedFrame = frame[y1m:y2m, x1m:x2m]
+                        cv2.imshow("Cropped frame", croppedFrame)
                         faces = app.get(croppedFrame)
                         if not faces: 
                             continue
 
                         face = faces[0]
-                        gender = Gender.MAN.value if face.gender == 1 else Gender.WOMAN.value
+                        gender = genderClassification[face.gender].value
 
                         peopleData[trackId] = gender
                         genderLog = addGenderLog(gender)
@@ -107,7 +100,8 @@ while cap.isOpened():
             case "'NoneType' object has no attribute 'int'": pass
             case _: print(f"Error: {e}")
 
-    cv2.imshow(NAME, frame)
+    scaledFrame = cv2.resize(frame, (w, h))
+    cv2.imshow(NAME, scaledFrame)
 
     if cv2.waitKey(1) & 0xFF == ord("q") or cv2.getWindowProperty(NAME, cv2.WND_PROP_VISIBLE) < 1:
         printQuitLog()
