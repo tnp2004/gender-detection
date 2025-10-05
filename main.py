@@ -1,113 +1,129 @@
 import logging
 logging.getLogger('tensorflow').setLevel(logging.ERROR)
+import cv2
 from ultralytics import YOLO
+from enum import Enum
+from insightface.app import FaceAnalysis
+
 from db import createGenderLog, findLocationByCameraId, activeCamera, inactiveCamera
 from file import getMetadata
 from utils.log import printGenderLog, printQuitLog
-from enum import Enum
-from insightface.app import FaceAnalysis
-import cv2
 
 class Gender(Enum):
     MAN = "Man"
     WOMAN = "Woman"
 
 NAME = "Gender detector"
-
+YOLO_MODEL = "yolo12m.pt"
 MAX_WINDOW_WIDTH_SIZE = 1280
 MAX_WINDOW_HEIGHT_SIZE = 720
 
-YOLO_MODEL = "yolo12m.pt"
-
 model = YOLO(YOLO_MODEL)
 classList = model.names
+model.to("cuda:0")
+model.fuse()
+model.half()
+
+app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
+app.prepare(ctx_id=0, det_size=(640, 640))
 
 metadata = getMetadata()
-
-def getWindowSize():
-    capWidth = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-    capHeight = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-    w = capWidth if capWidth <= MAX_WINDOW_WIDTH_SIZE else MAX_WINDOW_WIDTH_SIZE
-    h = capHeight if capHeight <= MAX_WINDOW_HEIGHT_SIZE else MAX_WINDOW_HEIGHT_SIZE
-    return w, h
-
 cap = cv2.VideoCapture(0)
+
+if not cap.isOpened():
+    raise RuntimeError("Error: Cannot open video file.")
+
+def get_window_size(cap):
+    width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    return (
+        min(width, MAX_WINDOW_WIDTH_SIZE),
+        min(height, MAX_WINDOW_HEIGHT_SIZE)
+    )
+
+w, h = get_window_size(cap)
 cv2.namedWindow(NAME, cv2.WINDOW_NORMAL)
-w, h = getWindowSize()
-
-app = FaceAnalysis(name="buffalo_l", providers=["CUDAExecutionProvider"])
-app.prepare(ctx_id=0, det_size = (640, 640))
-
-prevFrameTime = 0
-newFrameTime = 0
 
 peopleData = {}
+detectMargin = w * (0.1 if w > 800 else 0)
+genderLabels = [Gender.WOMAN, Gender.MAN]
 
-detectMarginRatio = 0.1 if w > 800 else 0
-detectMargin = w * detectMarginRatio
-
-genderClassification = [Gender.WOMAN, Gender.MAN]
+cameraId = metadata["cameraId"]
+locationInfo = findLocationByCameraId(cameraId)[0]
+locationId = locationInfo.locationId
 
 def addGenderLog(gender: str):
-    latestCameraLocation = findLocationByCameraId(metadata["cameraId"])[0]
-    return createGenderLog({"locationId": latestCameraLocation.locationId, "gender": gender})
+    return createGenderLog({
+        "locationId": locationId,
+        "gender": gender
+    })
 
 def drawTrackingBox(frame, trackId, pt1, pt2):
     cv2.rectangle(frame, pt1, pt2, (0, 255, 0), 2)
-    genderLabel = peopleData[trackId] if trackId in peopleData else "analyzing"
-    label = f"{genderLabel}"
-    cv2.putText(frame, label, (pt1[0], pt1[1] - 10), cv2.FONT_HERSHEY_COMPLEX, 0.6, (0, 255, 0), 2)
+    label = peopleData.get(trackId, "analyzing")
+    cv2.putText(frame, label, (pt1[0], pt1[1] - 10),
+                cv2.FONT_HERSHEY_COMPLEX, 0.6, (0, 255, 0), 2)
 
 def main():
-    while cap.isOpened():
+    activeCamera(cameraId)
+
+    while True:
         ret, frame = cap.read()
-        activeCamera(metadata["cameraId"])
-        if not ret: break
+        if not ret:
+            break
 
-        _, fw, _ = frame.shape
+        results = model.track(
+            frame,
+            persist=True,
+            classes=[0],
+            device="cuda:0",
+            verbose=False,
+            conf=0.25
+        )
 
-        try:
-            results = model.track(frame, persist=True, classes=[0], device="cuda:0", verbose=False, conf=0.2)
-            data = results[0].boxes
-            if data is None or not data.is_track: continue
-            boxes = data.xyxy.cpu()
-            trackIds = data.id.int().cpu().tolist()
+        if not results or not results[0].boxes:
+            continue
 
-            for box, trackId in zip(boxes, trackIds):
-                x1, y1, x2, y2 = map(int, box)
-                if x1 > detectMargin and x2 < (fw - detectMargin):
-                    if trackId not in peopleData:
-                        boxMargin = 10
-                        x1m = max(0, x1 - boxMargin)
-                        y1m = max(0, y1 - boxMargin)
-                        x2m = min(frame.shape[1], x2 + boxMargin)
-                        y2m = min(frame.shape[0], y2 + boxMargin)
+        boxesData = results[0].boxes
+        if not boxesData.is_track:
+            continue
 
-                        croppedFrame = frame[y1m:y2m, x1m:x2m]
-                        faces = app.get(croppedFrame)
-                        if not faces: continue
-                        
-                        face = faces[0]
-                        gender = genderClassification[face.gender].value
-                        peopleData[trackId] = gender
-                        genderLog = addGenderLog(gender)
-                        printGenderLog(gender, genderLog.detectedAt)
-                    drawTrackingBox(frame, trackId, (x1, y1), (x2, y2))
-        except Exception as e:
-            match str(e):
-                case "'NoneType' object has no attribute 'int'": pass
-                case _: print(f"Error: {e}")
+        boxes = boxesData.xyxy.cpu()
+        trackIds = boxesData.id.int().cpu().tolist()
+        fw = frame.shape[1]
 
-        scaledFrame = cv2.resize(frame, (w, h))
-        cv2.imshow(NAME, scaledFrame)
+        for box, trackId in zip(boxes, trackIds):
+            x1, y1, x2, y2 = map(int, box)
 
-        if cv2.waitKey(1) & 0xFF == ord("q") or cv2.getWindowProperty(NAME, cv2.WND_PROP_VISIBLE) < 1:
+            if trackId not in peopleData and (x1 > detectMargin and x2 < (fw - detectMargin)):
+                cropMargin = 10
+                x1m, y1m = max(0, x1 - cropMargin), max(0, y1 - cropMargin)
+                x2m, y2m = min(fw, x2 + cropMargin), min(frame.shape[0], y2 + cropMargin)
+                cropped = frame[y1m:y2m, x1m:x2m]
+
+                faces = app.get(cropped)
+                if faces:
+                    face = faces[0]
+                    gender = genderLabels[face.gender].value
+                    peopleData[trackId] = gender
+
+                    genderLog = addGenderLog(gender)
+                    printGenderLog(gender, genderLog.detectedAt)
+
+            drawTrackingBox(frame, trackId, (x1, y1), (x2, y2))
+
+        scaled = cv2.resize(frame, (w, h))
+        cv2.imshow(NAME, scaled)
+
+        key = cv2.waitKey(1)
+        if key == ord("q") or cv2.getWindowProperty(NAME, cv2.WND_PROP_VISIBLE) < 1:
             printQuitLog()
             break
 
-    inactiveCamera(metadata["cameraId"])
+    inactiveCamera(cameraId)
     cap.release()
     cv2.destroyAllWindows()
+
 
 if __name__ == "__main__":
     main()
