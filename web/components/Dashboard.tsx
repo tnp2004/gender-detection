@@ -44,7 +44,6 @@ export default function Dashboard() {
         fetchAllData() 
     }, [selectedDate])
 
-    // Realtime updates every 5 seconds (only when dashboard tab is active)
     useEffect(() => {
         if (activeTab !== "dashboard") return
 
@@ -86,7 +85,7 @@ export default function Dashboard() {
         <div className="container mx-auto px-10 py-2">
             <div className="flex justify-between gap-2 my-10">
                 <div className="flex flex-col">
-                    <h1 className="text-5xl font-bold">Gender Dashboard</h1>
+                    <h1 className="text-5xl font-bold">แดชบอร์ด</h1>
                     <div className="flex items-center gap-2 mt-2">
                         <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'}`}></div>
                         <span className="text-sm text-slate-600">
